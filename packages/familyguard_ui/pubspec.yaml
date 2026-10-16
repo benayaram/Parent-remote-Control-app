@@ -1,0 +1,13 @@
+name: familyguard_ui
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ^5.8.0
+  firebase_core: ^3.13.0
+  firebase_auth: ^5.5.0
+  flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.5.0
