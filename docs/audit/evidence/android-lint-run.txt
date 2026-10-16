@@ -1,0 +1,128 @@
+> Task :native:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :native:preBuild UP-TO-DATE
+> Task :native:preDebugBuild UP-TO-DATE
+> Task :native:generateDebugResValues UP-TO-DATE
+> Task :native:generateDebugResources UP-TO-DATE
+> Task :native:packageDebugResources UP-TO-DATE
+> Task :native:parseDebugLocalResources UP-TO-DATE
+> Task :native:generateDebugRFile UP-TO-DATE
+> Task :native:kspDebugKotlin UP-TO-DATE
+> Task :native:compileDebugKotlin UP-TO-DATE
+> Task :native:javaPreCompileDebug UP-TO-DATE
+> Task :native:compileDebugJavaWithJavac UP-TO-DATE
+> Task :native:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :native:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :native:preDebugUnitTestBuild UP-TO-DATE
+> Task :native:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :native:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :native:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :native:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :native:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :native:processDebugJavaRes UP-TO-DATE
+> Task :native:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :native:testDebugUnitTest
+> Task :native:mergeDebugJniLibFolders UP-TO-DATE
+> Task :native:mergeDebugNativeLibs NO-SOURCE
+> Task :native:stripDebugDebugSymbols NO-SOURCE
+> Task :native:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :native:extractDebugAnnotations UP-TO-DATE
+> Task :native:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :native:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :native:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :native:mergeDebugShaders UP-TO-DATE
+> Task :native:compileDebugShaders NO-SOURCE
+> Task :native:generateDebugAssets UP-TO-DATE
+> Task :native:packageDebugAssets UP-TO-DATE
+> Task :native:prepareDebugArtProfile UP-TO-DATE
+> Task :native:prepareLintJarForPublish UP-TO-DATE
+> Task :native:processDebugManifest UP-TO-DATE
+> Task :native:mergeDebugJavaResource UP-TO-DATE
+> Task :native:syncDebugLibJars UP-TO-DATE
+> Task :native:writeDebugAarMetadata UP-TO-DATE
+> Task :native:bundleDebugAar UP-TO-DATE
+> Task :native:assembleDebug UP-TO-DATE
+> Task :native:bundleDebugLocalLintAar
+> Task :native:createFullJarDebug
+> Task :native:preDebugAndroidTestBuild UP-TO-DATE
+> Task :native:generateDebugAndroidTestResValues
+> Task :native:writeDebugLintModelMetadata
+> Task :native:generateDebugAndroidTestLintModel
+> Task :native:extractProguardFiles
+> Task :native:generateDebugLintReportModel
+> Task :native:generateDebugUnitTestLintModel
+
+> Task :native:lintAnalyzeDebugAndroidTest
+Warning: Unable to initialize metrics, ensure /home/agent/.android is writable, details: /home/agent/.android/analytics.settings (No such file or directory)
+
+> Task :native:lintAnalyzeDebugUnitTest
+> Task :native:lintAnalyzeDebug
+
+> Task :native:lintReportDebug
+Wrote HTML report to file:///workspace/Parent-remote-Control-app/native/build/reports/lint-results-debug.html
+
+> Task :native:lintDebug FAILED
+Lint found 1 errors, 17 warnings. First failure:
+
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocationSharingService.kt:19: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]
+  try{manager=getSystemService(LocationManager::class.java);val provider=if(manager!!.isProviderEnabled(LocationManager.GPS_PROVIDER))LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER;manager!!.requestLocationUpdates(provider,60000,50f,this,Looper.getMainLooper())}catch(_:Exception){stopSelf()}
+                                                                                                                                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "MissingPermission":
+   This check scans through your code and libraries and looks at the APIs
+   being used, and checks this against the set of permissions required to
+   access those APIs. If the code using those APIs is called at runtime, then
+   the program will crash.
+
+   Furthermore, for permissions that are revocable (with targetSdkVersion 23),
+   client code must also be prepared to handle the calls throwing an exception
+   if the user rejects the request for permission at runtime.
+
+
+The full lint text report is located at:
+  /workspace/Parent-remote-Control-app/native/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':native:lintDebug'.
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  Lint found 1 errors, 17 warnings. First failure:
+  
+  /workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocationSharingService.kt:19: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]
+    try{manager=getSystemService(LocationManager::class.java);val provider=if(manager!!.isProviderEnabled(LocationManager.GPS_PROVIDER))LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER;manager!!.requestLocationUpdates(provider,60000,50f,this,Looper.getMainLooper())}catch(_:Exception){stopSelf()}
+                                                                                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+     Explanation for issues of type "MissingPermission":
+     This check scans through your code and libraries and looks at the APIs
+     being used, and checks this against the set of permissions required to
+     access those APIs. If the code using those APIs is called at runtime, then
+     the program will crash.
+  
+     Furthermore, for permissions that are revocable (with targetSdkVersion 23),
+     client code must also be prepared to handle the calls throwing an exception
+     if the user rejects the request for permission at runtime.
+  
+  
+  The full lint text report is located at:
+    /workspace/Parent-remote-Control-app/native/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 19s
+46 actionable tasks: 14 executed, 32 up-to-date

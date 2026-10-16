@@ -1,4 +1,6 @@
-# Phase report
+# Historical implementation checkpoints
+
+The implementation-phase results below predate the expanded acceptance audit. Current status is **not complete**, with 3 failing backend acceptance tests and a native lint error. See [the latest audit](audit/README.md).
 
 0 — Repository inspected; no reusable code. Plan, capability matrix, permissions and security docs committed before implementation. Android DPM source reviewed; current policy pages need restored network access.
 

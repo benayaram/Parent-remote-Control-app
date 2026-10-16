@@ -1,5 +1,6 @@
 # FamilyGuard
 
+**Latest acceptance audit: not complete — 29/32 backend tests pass, 14/14 Kotlin tests pass, and Android lint fails.** [Full specification checklist and reproducible defects](docs/audit/README.md).
 Transparent Android parental supervision: Flutter parent and child apps, native Kotlin adapters, TypeScript/Express API, Firebase Auth, MongoDB. **Development build, not a production-complete or hardware-validated product.** See [feature status](docs/feature-status.md) for exact evidence and remaining work.
 
 The repository was empty. Work follows [the implementation plan](docs/implementation-plan.md) and the preserved [master specification](docs/master-specification.md). The user's camera/microphone override is limited to visible, child-started local check-ins, without remote activation or upload.

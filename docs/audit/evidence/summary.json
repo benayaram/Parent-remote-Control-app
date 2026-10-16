@@ -1,0 +1,49 @@
+{
+  "reviewedApplicationCommit": "62a6d92c310073416f88401bcc663b2a46457746",
+  "date": "2026-10-16",
+  "backendExisting": {
+    "tests": 20,
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0
+  },
+  "backendAdditionalAcceptance": {
+    "tests": 12,
+    "passed": 9,
+    "failed": 3,
+    "skipped": 0
+  },
+  "backendCombined": {
+    "tests": 32,
+    "passed": 29,
+    "failed": 3,
+    "skipped": 0
+  },
+  "nativeJvm": {
+    "tests": 14,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "nativeAarBuild": "passed",
+  "androidLint": {
+    "outcome": "failed",
+    "errors": 1,
+    "warnings": 17,
+    "id": "MissingPermission",
+    "file": "native/src/main/java/com/familyguard/nativeguard/LocationSharingService.kt",
+    "line": 19
+  },
+  "flutterAnalyze": "blocked: Flutter absent and official download host denied",
+  "flutterWidgetTests": "not run",
+  "androidApkBuilds": "not run",
+  "mergedAppManifestAudit": "not run: neither app has a merged manifest",
+  "sourceManifestAudit": "passed against later user camera/microphone override",
+  "liveFirebaseMongoStorageFcm": "not run: configuration/credentials unavailable",
+  "eligibleAndroidHardware": "not tested; no device provided and adb cannot initialize read-only user directory",
+  "githubActionsStatus": "unverified: GitHub API forbidden",
+  "backendTypeCheck": "passed",
+  "backendBuild": "passed",
+  "demoTypeCheck": "passed",
+  "productionMissingConfigurationCheck": "expected fail-closed refusal, exit 1"
+}

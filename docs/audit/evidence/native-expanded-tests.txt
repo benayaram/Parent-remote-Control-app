@@ -1,0 +1,46 @@
+> Task :native:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :native:preBuild UP-TO-DATE
+> Task :native:preDebugBuild UP-TO-DATE
+> Task :native:generateDebugResValues UP-TO-DATE
+> Task :native:generateDebugResources UP-TO-DATE
+> Task :native:packageDebugResources UP-TO-DATE
+> Task :native:parseDebugLocalResources UP-TO-DATE
+> Task :native:generateDebugRFile UP-TO-DATE
+> Task :native:kspDebugKotlin UP-TO-DATE
+> Task :native:compileDebugKotlin UP-TO-DATE
+> Task :native:javaPreCompileDebug UP-TO-DATE
+> Task :native:compileDebugJavaWithJavac UP-TO-DATE
+> Task :native:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :native:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :native:preDebugUnitTestBuild UP-TO-DATE
+> Task :native:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :native:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :native:processDebugJavaRes UP-TO-DATE
+> Task :native:mergeDebugJniLibFolders UP-TO-DATE
+> Task :native:mergeDebugNativeLibs NO-SOURCE
+> Task :native:stripDebugDebugSymbols NO-SOURCE
+> Task :native:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :native:extractDebugAnnotations UP-TO-DATE
+> Task :native:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :native:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :native:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :native:mergeDebugShaders UP-TO-DATE
+> Task :native:compileDebugShaders NO-SOURCE
+> Task :native:generateDebugAssets UP-TO-DATE
+> Task :native:packageDebugAssets UP-TO-DATE
+> Task :native:prepareDebugArtProfile UP-TO-DATE
+> Task :native:prepareLintJarForPublish UP-TO-DATE
+> Task :native:processDebugManifest UP-TO-DATE
+> Task :native:mergeDebugJavaResource UP-TO-DATE
+> Task :native:syncDebugLibJars UP-TO-DATE
+> Task :native:writeDebugAarMetadata UP-TO-DATE
+> Task :native:bundleDebugAar UP-TO-DATE
+> Task :native:assembleDebug UP-TO-DATE
+> Task :native:kspDebugUnitTestKotlin
+> Task :native:compileDebugUnitTestKotlin
+> Task :native:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :native:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :native:testDebugUnitTest
+
+BUILD SUCCESSFUL in 2s
+33 actionable tasks: 3 executed, 30 up-to-date

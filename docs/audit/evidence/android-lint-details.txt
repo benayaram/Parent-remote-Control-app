@@ -1,0 +1,80 @@
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocationSharingService.kt:19: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]
+  try{manager=getSystemService(LocationManager::class.java);val provider=if(manager!!.isProviderEnabled(LocationManager.GPS_PROVIDER))LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER;manager!!.requestLocationUpdates(provider,60000,50f,this,Looper.getMainLooper())}catch(_:Exception){stopSelf()}
+                                                                                                                                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "MissingPermission":
+   This check scans through your code and libraries and looks at the APIs
+   being used, and checks this against the set of permissions required to
+   access those APIs. If the code using those APIs is called at runtime, then
+   the program will crash.
+
+   Furthermore, for permissions that are revocable (with targetSdkVersion 23),
+   client code must also be prepared to handle the calls throwing an exception
+   if the user rejects the request for permission at runtime.
+
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:19: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+ private val tick=object:Runnable{override fun run(){if(recorder!=null){val seconds=(System.currentTimeMillis()-started)/1000;status.text="● MICROPHONE RECORDING — ${seconds}s / 60s. Tap Stop.";if(seconds>=60)stopAudio()else handler.postDelayed(this,500)}}}
+                                                                                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:19: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+ private val tick=object:Runnable{override fun run(){if(recorder!=null){val seconds=(System.currentTimeMillis()-started)/1000;status.text="● MICROPHONE RECORDING — ${seconds}s / 60s. Tap Stop.";if(seconds>=60)stopAudio()else handler.postDelayed(this,500)}}}
+                                                                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:19: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+ private val tick=object:Runnable{override fun run(){if(recorder!=null){val seconds=(System.currentTimeMillis()-started)/1000;status.text="● MICROPHONE RECORDING — ${seconds}s / 60s. Tap Stop.";if(seconds>=60)stopAudio()else handler.postDelayed(this,500)}}}
+                                                                                                                                                                              ~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:22: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+  status=TextView(this).apply{text="Local check-in. Only you can start capture. No automatic upload. Everything is deleted when you close this screen.";textSize=19f};layout.addView(status)
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:27: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+  button("Listen to my local voice check-in"){stopAudio();player?.release();try{player=android.media.MediaPlayer().apply{setDataSource(audio?.absolutePath?:error("No recording"));prepare();start()};status.text="Playing your local voice check-in. Close to stop and discard."}catch(_:Exception){status.text="No local voice recording to play."}}
+                                                                                                                                                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:27: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+  button("Listen to my local voice check-in"){stopAudio();player?.release();try{player=android.media.MediaPlayer().apply{setDataSource(audio?.absolutePath?:error("No recording"));prepare();start()};status.text="Playing your local voice check-in. Close to stop and discard."}catch(_:Exception){status.text="No local voice recording to play."}}
+                                                                                                                                                                                                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:28: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+  button("Delete check-in"){stopAudio();player?.release();player=null;audio?.delete();photo?.delete();image.setImageDrawable(null);status.text="Local check-in deleted."}
+                                                                                                                                                ~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:31: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+   if(file==null||!file.exists()){status.text="Take a photo first."}else android.app.AlertDialog.Builder(this).setTitle("Share this photo?").setMessage("Your authorized family can view it for 24 hours. Only this photo is uploaded. Voice stays local. You can choose Cancel.").setNegativeButton("Cancel",null).setPositiveButton("Share photo"){_,_->
+                                               ~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:32: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+    status.text="Sharing the photo you selected…"
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:38: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+     runOnUiThread{if(!isDestroyed)status.text="Selected photo shared with your family. Expires in 24 hours."}
+                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:39: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+    }catch(_:Exception){runOnUiThread{if(!isDestroyed)status.text="Photo was not confirmed shared. Check pairing, storage configuration and connection."}}}.start()
+                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:46: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+ private fun takePhoto(){stopAudio();photo?.delete();photo=file(".jpg");val uri=FileProvider.getUriForFile(this,"$packageName.checkins",photo!!);try{startActivityForResult(Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT,uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION),20)}catch(_:Exception){status.text="No camera application is available.";photo?.delete()}}
+                                                                                                                                                                                                                                                                                                                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:47: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+ @Deprecated("Android activity callback") override fun onActivityResult(requestCode:Int,resultCode:Int,data:Intent?){super.onActivityResult(requestCode,resultCode,data);if(requestCode==20){if(resultCode==RESULT_OK){image.setImageURI(android.net.Uri.fromFile(photo));status.text="Photo stays on this device. Delete or close to discard."}else{photo?.delete();status.text="Camera cancelled."}}}
+                                                                                                                                                                                                                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:47: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+ @Deprecated("Android activity callback") override fun onActivityResult(requestCode:Int,resultCode:Int,data:Intent?){super.onActivityResult(requestCode,resultCode,data);if(requestCode==20){if(resultCode==RESULT_OK){image.setImageURI(android.net.Uri.fromFile(photo));status.text="Photo stays on this device. Delete or close to discard."}else{photo?.delete();status.text="Camera cancelled."}}}
+                                                                                                                                                                                                                                                                                                                                                                                  ~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:50: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+ }catch(_:Exception){stopAudio();audio?.delete();status.text="Microphone unavailable or permission denied."}}
+                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:51: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+ private fun stopAudio(){handler.removeCallbacks(tick);recorder?.let{try{it.stop()}catch(_:Exception){audio?.delete()};it.release()};if(recorder!=null)status.text="Microphone stopped. Local file will be discarded when closing.";recorder=null}
+                                                                                                                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/Parent-remote-Control-app/native/src/main/java/com/familyguard/nativeguard/LocalCheckInActivity.kt:52: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+ override fun onRequestPermissionsResult(requestCode:Int,permissions:Array<out String>,grantResults:IntArray){super.onRequestPermissionsResult(requestCode,permissions,grantResults);if(grantResults.firstOrNull()==PackageManager.PERMISSION_GRANTED){if(requestCode==11)takePhoto();if(requestCode==12)startAudio()}else status.text="Permission denied. No capture started."}
+                                                                                                                                                                                                                                                                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "SetTextI18n":
+   When calling TextView#setText
+   * Never call Number#toString() to format numbers; it will not handle
+   fraction separators and locale-specific digits properly. Consider using
+   String#format with proper format specifications (%d or %f) instead.
+   * Do not pass a string literal (e.g. "Hello") to display text. Hardcoded
+   text can not be properly translated to other languages. Consider using
+   Android resource strings instead.
+   * Do not build messages by concatenating text chunks. Such messages can not
+   be properly translated.
+
+   https://developer.android.com/guide/topics/resources/localization.html
+
+1 errors, 17 warnings

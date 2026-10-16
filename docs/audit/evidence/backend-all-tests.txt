@@ -1,0 +1,106 @@
+
+> familyguard-api@0.1.0 test
+> tsx --test test/*.test.ts audit/*.test.ts
+
+✖ SPEC-B: reject 48 hours of foreground usage in a single calendar day (84.087902ms)
+✖ SPEC-privacy: expired image cleanup must reach rows beyond the Mongo adapter page limit (23.461483ms)
+✖ SPEC-API: family creation records the required audit event (8.922083ms)
+✔ SPEC-A: signature from one child cannot access another child URL (29.471437ms)
+✔ SPEC-commands: one child cannot acknowledge another child command (20.248141ms)
+✔ SPEC-H: a location upload without explicit consent is rejected (11.05167ms)
+✔ SPEC-B: denying extra time does not create a grant (21.42391ms)
+✔ SPEC-B: expired extra-time requests cannot be approved (23.384188ms)
+✔ SPEC-privacy: export excludes data from another family (17.589733ms)
+✔ SPEC-images: failed Storage upload keeps a durable object cleanup job (18.900805ms)
+✔ SPEC-J: revoked co-parent receives no subsequent FCM alert hints (19.905466ms)
+✔ SPEC-API: safe JSON errors carry a request identifier (3.367865ms)
+✔ invalid/unverified authentication and family isolation (66.660497ms)
+✔ pairing requires parent confirmation, expires and is single use (34.120445ms)
+✔ unrelated parent cannot confirm or revoke another family device (16.45122ms)
+✔ device signature binds URL/body and rejects replay (17.650935ms)
+✔ command capability, allowlist, idempotency, expiry and ack state (28.795316ms)
+✔ revocation stops signed requests and cancels commands (24.45585ms)
+✔ policies validate timezone and versions; standard mode stays honest (35.799249ms)
+✔ usage is upserted, isolated and rejects impossible samples (19.514428ms)
+✔ location TTL, time request approval, SOS and deletion (25.326629ms)
+✔ high-impact operations require recent parent authentication (4.830214ms)
+✔ transaction rollback and domain boundaries (0.684569ms)
+✔ co-parent invitations are one-time and primary parent retains deletion control (12.811948ms)
+✔ concurrent pairing attempts cannot consume a session twice (7.597026ms)
+✔ accepting own invitation never downgrades the primary parent (7.026276ms)
+✔ child-shared images are normalized, family isolated and removed with data deletion (23.169786ms)
+✔ image expiry denies reads before storage cleanup completes (12.339878ms)
+✔ FCM outbox sends only privacy-minimal hints and does not recreate on command pull (12.938579ms)
+✔ geofence zones are family scoped and transitions become alerts (15.887163ms)
+✔ installed app reports stay partial and family scoped (14.961461ms)
+✔ failed notification sends remain durable and retry with backoff (10.059889ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 29
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1005.782781
+
+✖ failing tests:
+
+test at audit/spec-acceptance.test.ts:112:1
+✖ SPEC-B: reject 48 hours of foreground usage in a single calendar day (84.087902ms)
+  AssertionError [ERR_ASSERTION]: A single UTC calendar day cannot contain 172800 foreground seconds for one app
+  
+  200 !== 400
+  
+      at TestContext.<anonymous> (/workspace/Parent-remote-Control-app/backend/audit/spec-acceptance.test.ts:131:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at audit/spec-acceptance.test.ts:137:1
+✖ SPEC-privacy: expired image cleanup must reach rows beyond the Mongo adapter page limit (23.461483ms)
+  AssertionError [ERR_ASSERTION]: Expired Storage objects must not be starved by 2000 earlier unexpired rows
+  + actual - expected
+  
+  + []
+  - [
+  -   'test/expired'
+  - ]
+  
+      at TestContext.<anonymous> (/workspace/Parent-remote-Control-app/backend/audit/spec-acceptance.test.ts:170:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'test/expired' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at audit/spec-acceptance.test.ts:176:1
+✖ SPEC-API: family creation records the required audit event (8.922083ms)
+  AssertionError [ERR_ASSERTION]: The document requires audit logs for every endpoint; family creation currently has none
+      at TestContext.<anonymous> (/workspace/Parent-remote-Control-app/backend/audit/spec-acceptance.test.ts:180:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

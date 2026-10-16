@@ -1,0 +1,77 @@
+✖ SPEC-B: reject 48 hours of foreground usage in a single calendar day (81.376237ms)
+✖ SPEC-privacy: expired image cleanup must reach rows beyond the Mongo adapter page limit (14.140477ms)
+✖ SPEC-API: family creation records the required audit event (6.460451ms)
+✔ SPEC-A: signature from one child cannot access another child URL (21.891207ms)
+✔ SPEC-commands: one child cannot acknowledge another child command (18.04834ms)
+✔ SPEC-H: a location upload without explicit consent is rejected (10.80365ms)
+✔ SPEC-B: denying extra time does not create a grant (13.512112ms)
+✔ SPEC-B: expired extra-time requests cannot be approved (11.108269ms)
+✔ SPEC-privacy: export excludes data from another family (16.237318ms)
+✔ SPEC-images: failed Storage upload keeps a durable object cleanup job (15.226489ms)
+✔ SPEC-J: revoked co-parent receives no subsequent FCM alert hints (16.879965ms)
+✔ SPEC-API: safe JSON errors carry a request identifier (8.089781ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 9
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 860.811193
+
+✖ failing tests:
+
+test at backend/audit/spec-acceptance.test.ts:112:1
+✖ SPEC-B: reject 48 hours of foreground usage in a single calendar day (81.376237ms)
+  AssertionError [ERR_ASSERTION]: A single UTC calendar day cannot contain 172800 foreground seconds for one app
+  
+  200 !== 400
+  
+      at TestContext.<anonymous> (/workspace/Parent-remote-Control-app/backend/audit/spec-acceptance.test.ts:131:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at backend/audit/spec-acceptance.test.ts:137:1
+✖ SPEC-privacy: expired image cleanup must reach rows beyond the Mongo adapter page limit (14.140477ms)
+  AssertionError [ERR_ASSERTION]: Expired Storage objects must not be starved by 2000 earlier unexpired rows
+  + actual - expected
+  
+  + []
+  - [
+  -   'test/expired'
+  - ]
+  
+      at TestContext.<anonymous> (/workspace/Parent-remote-Control-app/backend/audit/spec-acceptance.test.ts:170:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'test/expired' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at backend/audit/spec-acceptance.test.ts:176:1
+✖ SPEC-API: family creation records the required audit event (6.460451ms)
+  AssertionError [ERR_ASSERTION]: The document requires audit logs for every endpoint; family creation currently has none
+      at TestContext.<anonymous> (/workspace/Parent-remote-Control-app/backend/audit/spec-acceptance.test.ts:180:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

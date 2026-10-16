@@ -1,0 +1,37 @@
+
+> familyguard-api@0.1.0 test
+> tsx --test test/*.test.ts
+
+✔ invalid/unverified authentication and family isolation (139.364643ms)
+✔ pairing requires parent confirmation, expires and is single use (62.092705ms)
+✔ unrelated parent cannot confirm or revoke another family device (22.527344ms)
+✔ device signature binds URL/body and rejects replay (25.078308ms)
+✔ command capability, allowlist, idempotency, expiry and ack state (52.374041ms)
+✔ revocation stops signed requests and cancels commands (19.554254ms)
+✔ policies validate timezone and versions; standard mode stays honest (38.718877ms)
+✔ usage is upserted, isolated and rejects impossible samples (43.04475ms)
+✔ location TTL, time request approval, SOS and deletion (36.917948ms)
+✔ high-impact operations require recent parent authentication (8.394408ms)
+✔ transaction rollback and domain boundaries (1.14781ms)
+✔ co-parent invitations are one-time and primary parent retains deletion control (41.004705ms)
+✔ concurrent pairing attempts cannot consume a session twice (12.975741ms)
+✔ accepting own invitation never downgrades the primary parent (9.845375ms)
+✔ child-shared images are normalized, family isolated and removed with data deletion (90.001001ms)
+✔ image expiry denies reads before storage cleanup completes (20.891259ms)
+✔ FCM outbox sends only privacy-minimal hints and does not recreate on command pull (15.41672ms)
+✔ geofence zones are family scoped and transitions become alerts (15.339503ms)
+✔ installed app reports stay partial and family scoped (27.842984ms)
+✔ failed notification sends remain durable and retry with backoff (11.026224ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1510.148435
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

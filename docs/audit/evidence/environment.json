@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-16",
+  "flutterInstalled": false,
+  "dartInstalled": false,
+  "flutterOfficialDownloadHttpResult": "proxy CONNECT 403 Forbidden",
+  "githubActionsApiResult": "Forbidden",
+  "configuredRuntimeBindings": [],
+  "configuredSecrets": [],
+  "MONGODB_URI": "not set",
+  "FIREBASE_PROJECT_ID": "not set",
+  "FIREBASE_STORAGE_BUCKET": "not set",
+  "GOOGLE_APPLICATION_CREDENTIALS": "not set",
+  "nativeFirebaseJsonFiles": [],
+  "appApkOutputs": [],
+  "appMergedManifests": [],
+  "adbResult": "exit 134; cannot mkdir read-only /home/agent/.android"
+}

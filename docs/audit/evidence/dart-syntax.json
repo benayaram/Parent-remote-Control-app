@@ -1,0 +1,25 @@
+{
+  "note": "Community parser only; not Flutter analysis/widget execution",
+  "results": [
+    {
+      "file": "apps/parent_app/lib/main.dart",
+      "syntaxParsed": true
+    },
+    {
+      "file": "apps/child_app/lib/main.dart",
+      "syntaxParsed": true
+    },
+    {
+      "file": "apps/parent_app/test/widget_test.dart",
+      "syntaxParsed": true
+    },
+    {
+      "file": "apps/child_app/test/widget_test.dart",
+      "syntaxParsed": true
+    },
+    {
+      "file": "packages/familyguard_ui/lib/familyguard_ui.dart",
+      "syntaxParsed": true
+    }
+  ]
+}
