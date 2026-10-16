@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+*.log
+.dart_tool/
+build/
+.flutter-plugins*
+local.properties
+.gradle/
+*.jks
+*.keystore
+google-services.json
+.firebase/
+artifacts/
