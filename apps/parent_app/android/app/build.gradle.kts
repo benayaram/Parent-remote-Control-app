@@ -7,3 +7,6 @@ android {
  kotlinOptions { jvmTarget="17" }
 }
 flutter { source="../.." }
+
+if(file("google-services.json").exists()) apply(plugin="com.google.gms.google-services")
+dependencies { implementation("com.google.firebase:firebase-messaging:24.1.1") }

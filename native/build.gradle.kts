@@ -7,6 +7,7 @@ android {
  kotlinOptions { jvmTarget = "17" }
 }
 dependencies {
+ implementation("com.google.firebase:firebase-messaging:24.1.1")
  implementation("androidx.core:core-ktx:1.15.0")
  implementation("androidx.room:room-runtime:2.6.1")
  ksp("androidx.room:room-compiler:2.6.1")

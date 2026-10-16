@@ -1,36 +1,637 @@
-import {test} from 'node:test';
-import assert from 'node:assert/strict';
-import request from 'supertest';
-import {generateKeyPairSync,createHash,sign,randomUUID} from 'node:crypto';
-import {createApp} from '../src/app.js';
-import {MemoryStore} from '../src/store.js';
-import {domainBlocked} from '../src/contracts.js';
-function fixture(){
- let clock=Date.parse('2026-10-16T10:00:00Z');const store=new MemoryStore();
- const app=createApp(store,async t=>{if(t==='invalid')throw Error();return {uid:t,emailVerified:t!=='unverified',authTime:clock/1000-(t==='stale'?600:0)};},()=>clock);
- const api=request(app);const {privateKey,publicKey}=generateKeyPairSync('ec',{namedCurve:'prime256v1'});const pem=publicKey.export({format:'pem',type:'spki'}).toString();
- const parent=(method:string,path:string,body?:any,who='alice')=>(api as any)[method]('/api/v1'+path).set('Authorization','Bearer '+who).send(body);
- const child=(method:string,path:string,deviceId:string,body?:any,nonce=randomUUID(),override?:any)=>{
-  const raw=body===undefined?'':JSON.stringify(body),time=String(clock),url='/api/v1'+path;
-  const message=[method.toUpperCase(),url,time,nonce,createHash('sha256').update(raw).digest('hex')].join('\n');
-  const sig=sign('sha256',Buffer.from(message),privateKey).toString('base64');
-  return (api as any)[method](url).set({'x-device-id':deviceId,'x-device-time':time,'x-device-nonce':nonce,'x-device-signature':sig}).send(override??body);
- };
- async function family(){return (await parent('post','/families',{name:'Test family'}).expect(201)).body.id;}
- async function pair(f?:string){const familyId=f??await family();const session=(await parent('post','/pairing/sessions',{familyId,childName:'Sam'}).expect(201)).body;
-  const claim=(await api.post('/api/v1/pairing/claim').send({code:session.code,publicKey:pem,disclosureAccepted:true,deviceName:'Test Android',androidApi:35,manufacturer:'test'}).expect(201)).body;
-  const d=(await parent('post','/pairing/confirm',{sessionId:session.sessionId,claimId:claim.claimId}).expect(200)).body;return {familyId,deviceId:d.deviceId,session,claim};}
- return {api,parent,child,family,pair,store,pem,advance:(ms:number)=>clock+=ms};
+import sharp from "sharp";
+import { cleanupImages, type ImageStore } from "../src/images.js";
+import { dispatchOne } from "../src/notifications.js";
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import request from "supertest";
+import { generateKeyPairSync, createHash, sign, randomUUID } from "node:crypto";
+import { createApp } from "../src/app.js";
+import { MemoryStore } from "../src/store.js";
+import { domainBlocked } from "../src/contracts.js";
+function fixture(images?: ImageStore) {
+  let clock = Date.parse("2026-10-16T10:00:00Z");
+  const store = new MemoryStore();
+  const app = createApp(
+    store,
+    async (t) => {
+      if (t === "invalid") throw Error();
+      return {
+        uid: t,
+        emailVerified: t !== "unverified",
+        authTime: clock / 1000 - (t === "stale" ? 600 : 0),
+      };
+    },
+    () => clock,
+    images,
+  );
+  const api = request(app);
+  const { privateKey, publicKey } = generateKeyPairSync("ec", {
+    namedCurve: "prime256v1",
+  });
+  const pem = publicKey.export({ format: "pem", type: "spki" }).toString();
+  const parent = (method: string, path: string, body?: any, who = "alice") =>
+    (api as any)
+      [method]("/api/v1" + path)
+      .set("Authorization", "Bearer " + who)
+      .send(body);
+  const child = (
+    method: string,
+    path: string,
+    deviceId: string,
+    body?: any,
+    nonce = randomUUID(),
+    override?: any,
+  ) => {
+    const raw = body === undefined ? "" : JSON.stringify(body),
+      time = String(clock),
+      url = "/api/v1" + path;
+    const message = [
+      method.toUpperCase(),
+      url,
+      time,
+      nonce,
+      createHash("sha256").update(raw).digest("hex"),
+    ].join("\n");
+    const sig = sign("sha256", Buffer.from(message), privateKey).toString(
+      "base64",
+    );
+    return (api as any)
+      [method](url)
+      .set({
+        "x-device-id": deviceId,
+        "x-device-time": time,
+        "x-device-nonce": nonce,
+        "x-device-signature": sig,
+      })
+      .send(override ?? body);
+  };
+  async function family() {
+    return (
+      await parent("post", "/families", { name: "Test family" }).expect(201)
+    ).body.id;
+  }
+  async function pair(f?: string) {
+    const familyId = f ?? (await family());
+    const session = (
+      await parent("post", "/pairing/sessions", {
+        familyId,
+        childName: "Sam",
+      }).expect(201)
+    ).body;
+    const claim = (
+      await api
+        .post("/api/v1/pairing/claim")
+        .send({
+          code: session.code,
+          publicKey: pem,
+          disclosureAccepted: true,
+          deviceName: "Test Android",
+          androidApi: 35,
+          manufacturer: "test",
+        })
+        .expect(201)
+    ).body;
+    const d = (
+      await parent("post", "/pairing/confirm", {
+        sessionId: session.sessionId,
+        claimId: claim.claimId,
+      }).expect(200)
+    ).body;
+    return { familyId, deviceId: d.deviceId, session, claim };
+  }
+  return {
+    api,
+    parent,
+    child,
+    family,
+    pair,
+    store,
+    pem,
+    advance: (ms: number) => (clock += ms),
+  };
 }
-const caps={usage:true,lock:true,location:true,suspend:false,kiosk:false,uninstall:false};
-test('invalid/unverified authentication and family isolation',async()=>{const f=fixture();await f.parent('post','/families',{name:'x'},'invalid').expect(401);await f.parent('post','/families',{name:'x'},'unverified').expect(403);const id=await f.family();await f.parent('get','/families/'+id,undefined,'bob').expect(404);await f.api.get('/api/v1/families/'+id).expect(401);});
-test('pairing requires parent confirmation, expires and is single use',async()=>{const f=fixture();const {deviceId,session,claim}=await f.pair();await f.parent('post','/pairing/confirm',{sessionId:session.sessionId,claimId:claim.claimId}).expect(400);const status=await f.api.get('/api/v1/pairing/claims/'+claim.claimId).expect(200);assert.equal(status.body.deviceId,deviceId);const familyId=await f.family();const p=(await f.parent('post','/pairing/sessions',{familyId,childName:'T'})).body;f.advance(300001);await f.api.post('/api/v1/pairing/claim').send({code:p.code,publicKey:f.pem,disclosureAccepted:true,deviceName:'T',androidApi:35,manufacturer:'T'}).expect(400);});
-test('unrelated parent cannot confirm or revoke another family device',async()=>{const f=fixture();const {deviceId,session,claim}=await f.pair();await f.parent('post','/devices/'+deviceId+'/revoke',{},'bob').expect(404);await f.parent('get','/devices/'+deviceId,undefined,'bob').expect(404);});
-test('device signature binds URL/body and rejects replay',async()=>{const f=fixture();const {deviceId}=await f.pair();const nonce=randomUUID(),path='/devices/'+deviceId+'/heartbeat',body={capabilities:caps,managementMode:'standard'};await f.child('post',path,deviceId,body,nonce).expect(200);await f.child('post',path,deviceId,body,nonce).expect(409);await f.child('post',path,deviceId,body,randomUUID(),{...body,battery:10}).expect(401);});
-test('command capability, allowlist, idempotency, expiry and ack state',async()=>{const f=fixture();const {deviceId}=await f.pair();const p='/devices/'+deviceId;await f.parent('post',p+'/commands',{type:'lock',payload:{},idempotencyKey:randomUUID()}).expect(409);await f.child('post',p+'/heartbeat',deviceId,{capabilities:caps,managementMode:'standard'}).expect(200);await f.parent('post',p+'/commands',{type:'camera',payload:{},idempotencyKey:randomUUID()}).expect(400);const body={type:'lock',payload:{},idempotencyKey:randomUUID()},one=(await f.parent('post',p+'/commands',body).expect(201)).body;assert.equal((await f.parent('post',p+'/commands',body)).body.id,one.id);const pulled=await f.child('get',p+'/commands',deviceId).expect(200);assert.equal(pulled.body[0].status,'delivered');await f.child('post','/commands/'+one.id+'/ack',deviceId,{status:'applied'}).expect(200);await f.child('post','/commands/'+one.id+'/ack',deviceId,{status:'applied'}).expect(200);await f.child('post','/commands/'+one.id+'/ack',deviceId,{status:'failed'}).expect(409);const two=(await f.parent('post',p+'/commands',{...body,idempotencyKey:randomUUID()})).body;f.advance(120001);assert.equal((await f.child('get',p+'/commands',deviceId)).body.length,0);await f.child('post','/commands/'+two.id+'/ack',deviceId,{status:'applied'}).expect(409);});
-test('revocation stops signed requests and cancels commands',async()=>{const f=fixture();const {deviceId}=await f.pair();await f.parent('post','/devices/'+deviceId+'/commands',{type:'sync_policy',payload:{},idempotencyKey:randomUUID()}).expect(201);await f.parent('post','/devices/'+deviceId+'/revoke',{}).expect(200);await f.child('get','/devices/'+deviceId+'/policy',deviceId).expect(404);assert.equal((await f.store.find('commands',{deviceId}))[0].status,'cancelled');});
-test('policies validate timezone and versions; standard mode stays honest',async()=>{const f=fixture();const {deviceId}=await f.pair();const p={timezone:'Asia/Kolkata',dailyMinutes:90,appRules:[],studyWindows:[],bedtimeWindows:[],webRules:{deny:['example.test'],allow:[]}};await f.parent('put','/devices/'+deviceId+'/policy',{...p,timezone:'invalid'}).expect(400);assert.equal((await f.parent('put','/devices/'+deviceId+'/policy',p)).body.version,1);assert.equal((await f.parent('put','/devices/'+deviceId+'/policy',p)).body.version,2);const c=(await f.parent('get','/devices/'+deviceId+'/capabilities')).body;assert.equal(c.capabilities.suspend,false);});
-test('usage is upserted, isolated and rejects impossible samples',async()=>{const f=fixture();const {deviceId}=await f.pair();const path='/devices/'+deviceId+'/usage',body={timezone:'UTC',localDate:'2026-10-16',samples:[{packageName:'org.example.app',foregroundSeconds:3600,sourceQuality:'partial'}]};await f.child('post',path,deviceId,body).expect(200);await f.child('post',path,deviceId,body).expect(200);assert.equal((await f.parent('get',path)).body.length,1);await f.parent('get',path,undefined,'bob').expect(404);await f.child('post',path,deviceId,{...body,localDate:'2026-10-17'}).expect(400);});
-test('location TTL, time request approval, SOS and deletion',async()=>{const f=fixture();const {deviceId,familyId}=await f.pair();const p='/devices/'+deviceId;await f.child('post',p+'/location',deviceId,{lat:12,lng:77,accuracyMeters:20,capturedAt:'2026-10-16T10:00:00.000Z',consent:true}).expect(200);assert.equal((await f.parent('get',p+'/location')).body.sample.lat,12);const r=(await f.child('post',p+'/time-requests',deviceId,{minutes:15,reason:'Homework'}).expect(201)).body;await f.parent('post','/time-requests/'+r.id+'/decision',{approved:true},'bob').expect(404);await f.parent('post','/time-requests/'+r.id+'/decision',{approved:true}).expect(200);await f.parent('post','/time-requests/'+r.id+'/decision',{approved:true}).expect(409);await f.child('post',p+'/sos',deviceId,{}).expect(201);assert.equal((await f.parent('get','/families/'+familyId+'/alerts')).body[0].type,'sos');f.advance(49*3600000);assert.equal((await f.parent('get',p+'/location')).body.sample,null);await f.parent('delete','/families/'+familyId+'/data',{}).expect(200);await f.parent('get','/families/'+familyId).expect(404);assert.equal((await f.store.find('location_samples',{deviceId})).length,0);});
-test('high-impact operations require recent parent authentication',async()=>{const f=fixture();const familyId=(await f.parent('post','/families',{name:'old'},'stale')).body.id;await f.parent('post','/pairing/sessions',{familyId,childName:'X'},'stale').expect(403);});
-test('transaction rollback and domain boundaries',async()=>{const s=new MemoryStore();await assert.rejects(s.transaction(async t=>{await t.put('families',{id:'a'});throw Error('rollback');}));assert.equal(await s.get('families','a'),undefined);assert.equal(domainBlocked('ads.example.test',['example.test'],[]),true);assert.equal(domainBlocked('notexample.test',['example.test'],[]),false);assert.equal(domainBlocked('school.example.test',['example.test'],['school.example.test']),false);});
+const caps = {
+  usage: true,
+  lock: true,
+  location: true,
+  suspend: false,
+  kiosk: false,
+  uninstall: false,
+};
+test("invalid/unverified authentication and family isolation", async () => {
+  const f = fixture();
+  await f.parent("post", "/families", { name: "x" }, "invalid").expect(401);
+  await f.parent("post", "/families", { name: "x" }, "unverified").expect(403);
+  const id = await f.family();
+  await f.parent("get", "/families/" + id, undefined, "bob").expect(404);
+  await f.api.get("/api/v1/families/" + id).expect(401);
+});
+test("pairing requires parent confirmation, expires and is single use", async () => {
+  const f = fixture();
+  const { deviceId, session, claim } = await f.pair();
+  await f
+    .parent("post", "/pairing/confirm", {
+      sessionId: session.sessionId,
+      claimId: claim.claimId,
+    })
+    .expect(400);
+  const status = await f.api
+    .get("/api/v1/pairing/claims/" + claim.claimId)
+    .expect(200);
+  assert.equal(status.body.deviceId, deviceId);
+  const familyId = await f.family();
+  const p = (
+    await f.parent("post", "/pairing/sessions", { familyId, childName: "T" })
+  ).body;
+  f.advance(300001);
+  await f.api
+    .post("/api/v1/pairing/claim")
+    .send({
+      code: p.code,
+      publicKey: f.pem,
+      disclosureAccepted: true,
+      deviceName: "T",
+      androidApi: 35,
+      manufacturer: "T",
+    })
+    .expect(400);
+});
+test("unrelated parent cannot confirm or revoke another family device", async () => {
+  const f = fixture();
+  const { deviceId, session, claim } = await f.pair();
+  await f
+    .parent("post", "/devices/" + deviceId + "/revoke", {}, "bob")
+    .expect(404);
+  await f.parent("get", "/devices/" + deviceId, undefined, "bob").expect(404);
+});
+test("device signature binds URL/body and rejects replay", async () => {
+  const f = fixture();
+  const { deviceId } = await f.pair();
+  const nonce = randomUUID(),
+    path = "/devices/" + deviceId + "/heartbeat",
+    body = { capabilities: caps, managementMode: "standard" };
+  await f.child("post", path, deviceId, body, nonce).expect(200);
+  await f.child("post", path, deviceId, body, nonce).expect(409);
+  await f
+    .child("post", path, deviceId, body, randomUUID(), { ...body, battery: 10 })
+    .expect(401);
+});
+test("command capability, allowlist, idempotency, expiry and ack state", async () => {
+  const f = fixture();
+  const { deviceId } = await f.pair();
+  const p = "/devices/" + deviceId;
+  await f
+    .parent("post", p + "/commands", {
+      type: "lock",
+      payload: {},
+      idempotencyKey: randomUUID(),
+    })
+    .expect(409);
+  await f
+    .child("post", p + "/heartbeat", deviceId, {
+      capabilities: caps,
+      managementMode: "standard",
+    })
+    .expect(200);
+  await f
+    .parent("post", p + "/commands", {
+      type: "camera",
+      payload: {},
+      idempotencyKey: randomUUID(),
+    })
+    .expect(400);
+  const body = { type: "lock", payload: {}, idempotencyKey: randomUUID() },
+    one = (await f.parent("post", p + "/commands", body).expect(201)).body;
+  assert.equal((await f.parent("post", p + "/commands", body)).body.id, one.id);
+  const pulled = await f.child("get", p + "/commands", deviceId).expect(200);
+  assert.equal(pulled.body[0].status, "delivered");
+  await f
+    .child("post", "/commands/" + one.id + "/ack", deviceId, {
+      status: "applied",
+    })
+    .expect(200);
+  await f
+    .child("post", "/commands/" + one.id + "/ack", deviceId, {
+      status: "applied",
+    })
+    .expect(200);
+  await f
+    .child("post", "/commands/" + one.id + "/ack", deviceId, {
+      status: "failed",
+    })
+    .expect(409);
+  const two = (
+    await f.parent("post", p + "/commands", {
+      ...body,
+      idempotencyKey: randomUUID(),
+    })
+  ).body;
+  f.advance(120001);
+  assert.equal(
+    (await f.child("get", p + "/commands", deviceId)).body.length,
+    0,
+  );
+  await f
+    .child("post", "/commands/" + two.id + "/ack", deviceId, {
+      status: "applied",
+    })
+    .expect(409);
+});
+test("revocation stops signed requests and cancels commands", async () => {
+  const f = fixture();
+  const { deviceId } = await f.pair();
+  await f
+    .parent("post", "/devices/" + deviceId + "/commands", {
+      type: "sync_policy",
+      payload: {},
+      idempotencyKey: randomUUID(),
+    })
+    .expect(201);
+  await f.parent("post", "/devices/" + deviceId + "/revoke", {}).expect(200);
+  await f
+    .child("get", "/devices/" + deviceId + "/policy", deviceId)
+    .expect(404);
+  assert.equal(
+    (await f.store.find("commands", { deviceId }))[0].status,
+    "cancelled",
+  );
+});
+test("policies validate timezone and versions; standard mode stays honest", async () => {
+  const f = fixture();
+  const { deviceId } = await f.pair();
+  const p = {
+    timezone: "Asia/Kolkata",
+    dailyMinutes: 90,
+    appRules: [],
+    studyWindows: [],
+    bedtimeWindows: [],
+    webRules: { deny: ["example.test"], allow: [] },
+  };
+  await f
+    .parent("put", "/devices/" + deviceId + "/policy", {
+      ...p,
+      timezone: "invalid",
+    })
+    .expect(400);
+  assert.equal(
+    (await f.parent("put", "/devices/" + deviceId + "/policy", p)).body.version,
+    1,
+  );
+  assert.equal(
+    (await f.parent("put", "/devices/" + deviceId + "/policy", p)).body.version,
+    2,
+  );
+  const c = (await f.parent("get", "/devices/" + deviceId + "/capabilities"))
+    .body;
+  assert.equal(c.capabilities.suspend, false);
+});
+test("usage is upserted, isolated and rejects impossible samples", async () => {
+  const f = fixture();
+  const { deviceId } = await f.pair();
+  const path = "/devices/" + deviceId + "/usage",
+    body = {
+      timezone: "UTC",
+      localDate: "2026-10-16",
+      samples: [
+        {
+          packageName: "org.example.app",
+          foregroundSeconds: 3600,
+          sourceQuality: "partial",
+        },
+      ],
+    };
+  await f.child("post", path, deviceId, body).expect(200);
+  await f.child("post", path, deviceId, body).expect(200);
+  assert.equal((await f.parent("get", path)).body.length, 1);
+  await f.parent("get", path, undefined, "bob").expect(404);
+  await f
+    .child("post", path, deviceId, { ...body, localDate: "2026-10-17" })
+    .expect(400);
+});
+test("location TTL, time request approval, SOS and deletion", async () => {
+  const f = fixture();
+  const { deviceId, familyId } = await f.pair();
+  const p = "/devices/" + deviceId;
+  await f
+    .child("post", p + "/location", deviceId, {
+      lat: 12,
+      lng: 77,
+      accuracyMeters: 20,
+      capturedAt: "2026-10-16T10:00:00.000Z",
+      consent: true,
+    })
+    .expect(200);
+  assert.equal((await f.parent("get", p + "/location")).body.sample.lat, 12);
+  const r = (
+    await f
+      .child("post", p + "/time-requests", deviceId, {
+        minutes: 15,
+        reason: "Homework",
+      })
+      .expect(201)
+  ).body;
+  await f
+    .parent(
+      "post",
+      "/time-requests/" + r.id + "/decision",
+      { approved: true },
+      "bob",
+    )
+    .expect(404);
+  await f
+    .parent("post", "/time-requests/" + r.id + "/decision", { approved: true })
+    .expect(200);
+  await f
+    .parent("post", "/time-requests/" + r.id + "/decision", { approved: true })
+    .expect(409);
+  await f.child("post", p + "/sos", deviceId, {}).expect(201);
+  assert.equal(
+    (await f.parent("get", "/families/" + familyId + "/alerts")).body[0].type,
+    "sos",
+  );
+  f.advance(49 * 3600000);
+  assert.equal((await f.parent("get", p + "/location")).body.sample, null);
+  await f.parent("delete", "/families/" + familyId + "/data", {}).expect(200);
+  await f.parent("get", "/families/" + familyId).expect(404);
+  assert.equal(
+    (await f.store.find("location_samples", { deviceId })).length,
+    0,
+  );
+});
+test("high-impact operations require recent parent authentication", async () => {
+  const f = fixture();
+  const familyId = (
+    await f.parent("post", "/families", { name: "old" }, "stale")
+  ).body.id;
+  await f
+    .parent("post", "/pairing/sessions", { familyId, childName: "X" }, "stale")
+    .expect(403);
+});
+test("transaction rollback and domain boundaries", async () => {
+  const s = new MemoryStore();
+  await assert.rejects(
+    s.transaction(async (t) => {
+      await t.put("families", { id: "a" });
+      throw Error("rollback");
+    }),
+  );
+  assert.equal(await s.get("families", "a"), undefined);
+  assert.equal(domainBlocked("ads.example.test", ["example.test"], []), true);
+  assert.equal(domainBlocked("notexample.test", ["example.test"], []), false);
+  assert.equal(
+    domainBlocked(
+      "school.example.test",
+      ["example.test"],
+      ["school.example.test"],
+    ),
+    false,
+  );
+});
+test("co-parent invitations are one-time and primary parent retains deletion control", async () => {
+  const f = fixture();
+  const familyId = await f.family();
+  const inv = (
+    await f
+      .parent("post", "/families/" + familyId + "/invitations", {})
+      .expect(201)
+  ).body;
+  await f
+    .parent("post", "/invitations/accept", { code: inv.code }, "bob")
+    .expect(200);
+  await f
+    .parent("post", "/invitations/accept", { code: inv.code }, "eve")
+    .expect(400);
+  await f.parent("get", "/families/" + familyId, undefined, "bob").expect(200);
+  await f
+    .parent("delete", "/families/" + familyId + "/data", {}, "bob")
+    .expect(403);
+  await f
+    .parent("post", "/families/" + familyId + "/members/bob/revoke", {})
+    .expect(200);
+  await f.parent("get", "/families/" + familyId, undefined, "bob").expect(404);
+});
+test("concurrent pairing attempts cannot consume a session twice", async () => {
+  const f = fixture();
+  const familyId = await f.family();
+  const session = (
+    await f.parent("post", "/pairing/sessions", { familyId, childName: "Sam" })
+  ).body;
+  const body = {
+    code: session.code,
+    publicKey: f.pem,
+    disclosureAccepted: true,
+    deviceName: "T",
+    androidApi: 35,
+    manufacturer: "Test",
+  };
+  const results = await Promise.all([
+    f.api.post("/api/v1/pairing/claim").send(body),
+    f.api.post("/api/v1/pairing/claim").send(body),
+  ]);
+  assert.deepEqual(results.map((r) => r.status).sort(), [201, 400]);
+});
+
+test("accepting own invitation never downgrades the primary parent", async () => {
+  const f = fixture();
+  const familyId = await f.family();
+  const inv = (
+    await f.parent("post", "/families/" + familyId + "/invitations", {})
+  ).body;
+  await f.parent("post", "/invitations/accept", { code: inv.code }).expect(409);
+  await f.parent("delete", "/families/" + familyId + "/data", {}).expect(200);
+});
+
+test("child-shared images are normalized, family isolated and removed with data deletion", async () => {
+  const objects = new Map<string, Buffer>();
+  const imageStore: ImageStore = {
+    async put(p, b) {
+      objects.set(p, b);
+    },
+    async get(p) {
+      return objects.get(p)!;
+    },
+    async remove(p) {
+      objects.delete(p);
+    },
+  };
+  const f = fixture(imageStore),
+    { deviceId, familyId } = await f.pair();
+  const bytes = await sharp({
+    create: { width: 4, height: 4, channels: 3, background: "#ff0000" },
+  })
+    .png()
+    .toBuffer();
+  const path = "/devices/" + deviceId + "/images";
+  await f
+    .child("post", path, deviceId, {
+      base64: bytes.toString("base64"),
+      childConfirmedShare: false,
+    })
+    .expect(400);
+  const upload = (
+    await f
+      .child("post", path, deviceId, {
+        base64: bytes.toString("base64"),
+        childConfirmedShare: true,
+      })
+      .expect(201)
+  ).body;
+  assert.equal(objects.size, 1);
+  const shared = (await f.parent("get", "/images/" + upload.id).expect(200))
+    .body;
+  const metadata = await sharp(Buffer.from(shared.base64, "base64")).metadata();
+  assert.equal(metadata.format, "jpeg");
+  assert.equal(metadata.exif, undefined);
+  await f.parent("get", "/images/" + upload.id, undefined, "bob").expect(404);
+  await f
+    .child("post", path, deviceId, {
+      base64: Buffer.from("this is not an image file").toString("base64"),
+      childConfirmedShare: true,
+    })
+    .expect(400);
+  await f.parent("delete", "/families/" + familyId + "/data", {}).expect(200);
+  assert.equal((await f.store.find("storage_cleanup", {})).length, 1);
+  await cleanupImages(f.store, imageStore);
+  assert.equal(objects.size, 0);
+});
+test("image expiry denies reads before storage cleanup completes", async () => {
+  const objects = new Map<string, Buffer>();
+  const imageStore: ImageStore = {
+    async put(p, b) {
+      objects.set(p, b);
+    },
+    async get(p) {
+      return objects.get(p)!;
+    },
+    async remove(p) {
+      objects.delete(p);
+    },
+  };
+  const f = fixture(imageStore),
+    { deviceId } = await f.pair();
+  const bytes = await sharp({
+    create: { width: 2, height: 2, channels: 3, background: "#fff" },
+  })
+    .png()
+    .toBuffer();
+  const upload = (
+    await f.child("post", "/devices/" + deviceId + "/images", deviceId, {
+      base64: bytes.toString("base64"),
+      childConfirmedShare: true,
+    })
+  ).body;
+  f.advance(86400001);
+  await f.parent("get", "/images/" + upload.id).expect(404);
+  assert.equal(objects.size, 1);
+  await cleanupImages(f.store, imageStore, Date.parse("2026-10-17T10:00:01Z"));
+  assert.equal(objects.size, 0);
+});
+test("FCM outbox sends only privacy-minimal hints and does not recreate on command pull", async () => {
+  const f = fixture(),
+    { deviceId } = await f.pair();
+  await f
+    .child("post", "/devices/" + deviceId + "/push-token", deviceId, {
+      token: "child-routing-token-with-enough-length",
+    })
+    .expect(200);
+  await f
+    .parent("post", "/devices/" + deviceId + "/commands", {
+      type: "sync_policy",
+      payload: {},
+      idempotencyKey: randomUUID(),
+    })
+    .expect(201);
+  const sent: any[] = [];
+  assert.equal(
+    await dispatchOne(f.store, async (tokens, data) => {
+      sent.push({ tokens, data });
+    }),
+    true,
+  );
+  assert.deepEqual(Object.keys(sent[0].data).sort(), ["deviceId", "type"]);
+  assert.equal(sent[0].data.type, "command_available");
+  await f
+    .child("get", "/devices/" + deviceId + "/commands", deviceId)
+    .expect(200);
+  assert.equal(
+    (await f.store.find("notification_outbox", {}))[0].status,
+    "sent",
+  );
+  assert.equal(await dispatchOne(f.store, async () => {}), false);
+});
+test("geofence zones are family scoped and transitions become alerts", async () => {
+  const f = fixture(),
+    { deviceId, familyId } = await f.pair();
+  const path = "/devices/" + deviceId + "/geofences";
+  const body = {
+    zones: [{ name: "School", lat: 12, lng: 77, radiusMeters: 150 }],
+  };
+  await f.parent("put", path, body, "bob").expect(404);
+  const zones = (await f.parent("put", path, body).expect(200)).body;
+  await f
+    .child("post", "/devices/" + deviceId + "/geofence-events", deviceId, {
+      geofenceId: zones[0].id,
+      transition: "enter",
+      capturedAt: "2026-10-16T10:00:00Z",
+    })
+    .expect(200);
+  assert.equal(
+    (await f.parent("get", "/families/" + familyId + "/alerts")).body[0].type,
+    "geofence",
+  );
+});
+
+test("installed app reports stay partial and family scoped", async () => {
+  const f = fixture(),
+    { deviceId } = await f.pair();
+  const path = "/devices/" + deviceId + "/apps";
+  const body = {
+    partial: true,
+    apps: [
+      {
+        packageName: "org.example.learning",
+        label: "Learning",
+        version: "1.0",
+        visibility: "partial",
+      },
+    ],
+  };
+  await f.child("post", path, deviceId, body).expect(200);
+  assert.equal((await f.parent("get", path)).body.partial, true);
+  await f.parent("get", path, undefined, "bob").expect(404);
+  await f
+    .child("post", path, deviceId, { ...body, partial: false })
+    .expect(400);
+});
+test("failed notification sends remain durable and retry with backoff", async () => {
+  const f = fixture(),
+    { deviceId } = await f.pair();
+  await f
+    .child("post", "/devices/" + deviceId + "/push-token", deviceId, {
+      token: "test-routing-token-with-enough-length",
+    })
+    .expect(200);
+  await f.parent("post", "/devices/" + deviceId + "/commands", {
+    type: "sync_policy",
+    payload: {},
+    idempotencyKey: randomUUID(),
+  });
+  const now = Date.now();
+  await dispatchOne(
+    f.store,
+    async () => {
+      throw Error("network");
+    },
+    now,
+  );
+  assert.equal(
+    (await f.store.find("notification_outbox", {}))[0].status,
+    "pending",
+  );
+  assert.equal(await dispatchOne(f.store, async () => {}, now + 100), false);
+  await dispatchOne(f.store, async () => {}, now + 5000);
+  assert.equal(
+    (await f.store.find("notification_outbox", {}))[0].status,
+    "sent",
+  );
+});

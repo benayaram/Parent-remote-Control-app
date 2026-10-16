@@ -25,7 +25,10 @@ class SyncWorker(context:Context,params:WorkerParameters):Worker(context,params)
   return try{
    val controls=DeviceControls(applicationContext)
    call("POST","/devices/$id/heartbeat",JSONObject().put("managementMode",if(controls.owner())"managed" else "standard").put("capabilities",JSONObject(controls.capabilities())))
-   val policy=call("GET","/devices/$id/policy");LocalCache(applicationContext).save(policy)
+   prefs.getString("pushToken",null)?.let{call("POST","/devices/$id/push-token",JSONObject().put("token",it))}
+   val policy=JSONObject(call("GET","/devices/$id/policy")).put("geofences",JSONArray(call("GET","/devices/$id/geofences"))).toString();LocalCache(applicationContext).save(policy)
+   val inventoryDate=java.time.LocalDate.now().toString()
+   if(prefs.getString("inventoryDate",null)!=inventoryDate){call("POST","/devices/$id/apps",JSONObject().put("partial",true).put("apps",org.json.JSONArray(UsageAdapter(applicationContext).inventory().take(200))));prefs.edit().putString("inventoryDate",inventoryDate).apply()}
    val usage=UsageAdapter(applicationContext).report();if(usage["permission"]==true){call("POST","/devices/$id/usage",JSONObject(usage.filterKeys{it!="permission"}));warnBudget(JSONObject(policy),usage)}
    val commands=JSONArray(call("GET","/devices/$id/commands"));for(i in 0 until commands.length()){val c=commands.getJSONObject(i);val result=controls.execute(c.getString("id"),c.getString("type"),c.getString("expiresAt"));call("POST","/commands/${c.getString("id")}/ack",JSONObject(result))}
    Result.success()
@@ -35,16 +38,22 @@ class SyncWorker(context:Context,params:WorkerParameters):Worker(context,params)
   }
  }
  private fun warnBudget(policy:JSONObject,usage:Map<String,Any>){
+  if(usage["permission"]!=true)return
   val samples=usage["samples"] as? List<*>?:return
-  val seconds=samples.sumOf{((it as? Map<*,*>)?.get("foregroundSeconds") as? Number)?.toLong()?:0}
-  val extra=policy.optJSONObject("extraTime")
-  val grant=if(extra!=null&&!PolicyEngine.expired(extra.getString("expiresAt"),System.currentTimeMillis()))extra.optInt("minutes",0)else 0
-  val minutes=policy.optInt("dailyMinutes",120)+grant
-  if(seconds<minutes*60L*8/10)return
+  val totals=samples.mapNotNull{val m=it as? Map<*,*>?:return@mapNotNull null;val name=m["packageName"] as? String?:return@mapNotNull null;name to ((m["foregroundSeconds"] as? Number)?.toLong()?:0)}.toMap()
+  val extra=policy.optJSONObject("extraTime");val grant=if(extra!=null&&!PolicyEngine.expired(extra.getString("expiresAt"),System.currentTimeMillis()))extra.optInt("minutes",0)else 0
+  val reminders=mutableListOf<Pair<String,String>>()
+  if(totals.values.sum()>=(policy.optInt("dailyMinutes",120)+grant)*60L*8/10)reminders+="overall" to "You are approaching today's screen-time budget."
+  val appRules=policy.optJSONArray("appRules")
+  if(appRules!=null)for(i in 0 until appRules.length()){val rule=appRules.getJSONObject(i);val name=rule.getString("packageName");if((totals[name]?:0)>0&&(totals[name]?:0)>=rule.getInt("dailyMinutes")*60L*8/10)reminders+="app:$name" to "One app is approaching its time budget. Review your rules."}
+  val at=java.time.ZonedDateTime.now(java.time.ZoneId.of(policy.optString("timezone",java.time.ZoneId.systemDefault().id)))
+  for(key in listOf("studyWindows","bedtimeWindows")){val windows=policy.optJSONArray(key)?:continue
+   for(i in 0 until windows.length()){val w=windows.getJSONObject(i);val days=w.getJSONArray("days");val window=TimeWindow((0 until days.length()).map{days.getInt(it)}.toSet(),java.time.LocalTime.parse(w.getString("start")),java.time.LocalTime.parse(w.getString("end")));if(window.active(at))reminders+=key to if(key=="studyWindows")"Your study schedule is active. Choose your approved activities." else "Your bedtime schedule is active. Consider putting your phone away."}
+  }
   val c=applicationContext;if(android.os.Build.VERSION.SDK_INT>=33&&c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return
-  val date=usage["localDate"].toString();val p=c.getSharedPreferences("notifications",0);if(p.getString("warned",null)==date)return
-  val manager=c.getSystemService(NotificationManager::class.java);manager.createNotificationChannel(NotificationChannel("budget","Time budget reminders",NotificationManager.IMPORTANCE_DEFAULT))
-  manager.notify(1,NotificationCompat.Builder(c,"budget").setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle("Your screen-time budget").setContentText("You are approaching today's budget. Reminders do not block apps or emergency calls.").setAutoCancel(true).build());p.edit().putString("warned",date).apply()
+  val date=usage["localDate"].toString();val p=c.getSharedPreferences("notifications",0)
+  val manager=c.getSystemService(NotificationManager::class.java);manager.createNotificationChannel(NotificationChannel("budget","Time budget and schedule reminders",NotificationManager.IMPORTANCE_DEFAULT))
+  for((key,text)in reminders){if(p.getString(key,null)==date)continue;manager.notify(key.hashCode(),NotificationCompat.Builder(c,"budget").setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle("FamilyGuard reminder").setContentText("$text Reminders do not block apps or emergency calls.").setAutoCancel(true).build());p.edit().putString(key,date).apply()}
  }
  companion object{fun schedule(context:Context){val request=PeriodicWorkRequestBuilder<SyncWorker>(15,TimeUnit.MINUTES).setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).setBackoffCriteria(BackoffPolicy.EXPONENTIAL,30,TimeUnit.SECONDS).build();WorkManager.getInstance(context).enqueueUniquePeriodicWork("familyguard.sync",ExistingPeriodicWorkPolicy.KEEP,request)}}
 }

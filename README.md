@@ -8,7 +8,7 @@ The repository was empty. Work follows [the implementation plan](docs/implementa
 
 Node 24: `cd backend && npm ci && npm run check && npm test && npm run build`.
 
-Backend runtime: configure `MONGODB_URI` (MongoDB replica set), `FIREBASE_PROJECT_ID` and Firebase Application Default Credentials securely, then `npm start`. Production entrypoint has no demo auth or memory-store fallback. HTTPS is required by mobile; API binds loopback by default for TLS reverse proxy deployment.
+Backend runtime: configure `MONGODB_URI` (MongoDB replica set), `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET` and Firebase Application Default Credentials securely, then `npm start`. Production entrypoint has no demo auth or memory-store fallback. HTTPS is required by mobile; API binds loopback by default for TLS reverse proxy deployment.
 
 See [apps setup](apps/README.md) for Flutter/Firebase options. In each app run `flutter pub get`, `flutter analyze`, `flutter test`, `flutter build apk --debug`. Native-only: configure Android SDK in ignored `local.properties`, then `./gradlew :native:testDebugUnitTest :native:assembleDebug`.
 
@@ -19,9 +19,11 @@ See [apps setup](apps/README.md) for Flutter/Firebase options. In each app run `
 - `native`: UsageEvents, partial launcher package inventory, device-admin lock, encrypted Room policy payloads, WorkManager sync and local notifications. Managed suspension/uninstall adapters are not exposed remotely before hardware/recovery validation.
 - `demo/walkthrough`: synthetic dashboard walkthrough; not Android device evidence.
 
-## Honest boundaries
+## Data and feature boundaries
 
-Standard mode does not guarantee app blocking/uninstall prevention. Device admin is not device owner. Kiosk, VPN packet forwarding, geofence/background-location integration, production FCM registration, scheduled per-app enforcement, rich reporting/export files and full co-parent UI remain incomplete. Backend supports co-parent invitation endpoints. Location is foreground, user-triggered, and timestamped. SOS API storage is not guaranteed emergency delivery; the child can open the system dialer without backend access. Camera/microphone require a visible child action, stop on leaving, have no network upload path and are never remote commands.
+Flutter is the frontend; Node.js/Express is the backend. MongoDB stores structured/text data; Firebase Storage holds child-explicitly-shared images. See [Firebase setup](firebase/README.md). FCM wakeups use a durable retry outbox; delivery is best effort. Foreground location sharing/geofence evaluation and DNS-only VPN require child approval and visible notifications. Real Android behavior remains untested.
+
+Standard mode does not guarantee app blocking/uninstall prevention. Device admin is not device owner. Managed kiosk/recovery and remote owner-control exposure remain incomplete. Native owner adapters compile but are not enabled remotely before safety validation. CSV/PDF export is optional and unimplemented. Camera/voice are child-started only; selected photos upload only after Share confirmation, voice stays local and no remote activation exists.
 
 ## Verification and release
 

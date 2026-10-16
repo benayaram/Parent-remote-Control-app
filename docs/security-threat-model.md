@@ -1,4 +1,5 @@
 # Security threat model
+
 Risks: stolen parent session, unrelated parent access, pairing hijack, replay, compromised child reports, location leakage, abusive household use, backend compromise.
 Controls: Firebase revoked-token/email checks; server family authorization; parent reauthentication; random high-entropy expiring pairing codes stored hashed, single-use atomic consume; child consent and parent approval; Keystore P-256 signing with timestamp/nonce/body/URL binding; strict schemas; TTL and command expiry; safe error responses; no secrets/location payload logs. Untrusted telemetry is labeled reported, not proof.
 Residual risks: rooted devices can falsify telemetry; device clock affects stale checks; OS may defer work; free servers sleep; device-owner powers require recovery documentation; no emergency delivery guarantees. TLS termination, Mongo credentials, backups, retention review, credential rotation and rate-limit proxy configuration are deployment responsibilities. Demo authentication/store must never be used by production entrypoint.

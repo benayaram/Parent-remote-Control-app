@@ -13,7 +13,8 @@ import java.security.KeyStore
 @Dao interface PolicyDao{@Query("SELECT * FROM policies WHERE id='active'") fun active():CachedPolicy?;@Insert(onConflict=OnConflictStrategy.REPLACE) fun put(row:CachedPolicy)}
 @Database(entities=[CachedPolicy::class],version=1,exportSchema=false) abstract class GuardDb:RoomDatabase(){abstract fun policies():PolicyDao}
 class LocalCache(context:Context){
- private val db=Room.databaseBuilder(context,GuardDb::class.java,"familyguard.db").build()
+ companion object{@Volatile private var instance:GuardDb?=null;private fun database(context:Context):GuardDb=instance?:synchronized(this){instance?:Room.databaseBuilder(context.applicationContext,GuardDb::class.java,"familyguard.db").build().also{instance=it}}}
+ private val db=database(context)
  private val alias="familyguard.policy.aes"
  @Synchronized private fun key():SecretKey{val ks=KeyStore.getInstance("AndroidKeyStore").apply{load(null)};if(!ks.containsAlias(alias))KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,"AndroidKeyStore").apply{init(KeyGenParameterSpec.Builder(alias,KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT).setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build())}.generateKey();return ks.getKey(alias,null) as SecretKey}
  fun save(json:String){val cipher=Cipher.getInstance("AES/GCM/NoPadding").apply{init(Cipher.ENCRYPT_MODE,key())};val bytes=cipher.iv+cipher.doFinal(json.toByteArray(Charsets.UTF_8));db.policies().put(CachedPolicy(encrypted=Base64.encodeToString(bytes,Base64.NO_WRAP),updatedAt=System.currentTimeMillis()))}

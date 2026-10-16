@@ -1,0 +1,29 @@
+{
+  "name": "familyguard-walkthrough",
+  "version": "1.0.0",
+  "description": "My Remotion video",
+  "scripts": {
+    "dev": "remotion studio src/index.ts",
+    "check": "tsc --noEmit",
+    "render": "remotion render src/index.ts FamilyGuard artifacts/familyguard-demo.mp4 --browser-executable=/usr/bin/chromium --concurrency=2"
+  },
+  "repository": {},
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@remotion/cli": "4.0.536",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.536"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3",
+    "playwright": "^1.56.0"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "private": true
+}

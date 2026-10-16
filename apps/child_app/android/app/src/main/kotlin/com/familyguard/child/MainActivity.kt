@@ -3,6 +3,8 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import com.familyguard.nativeguard.*
+import androidx.core.content.ContextCompat
+import android.net.VpnService
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -19,7 +21,8 @@ class MainActivity:FlutterActivity(){
    fun answer(block:()->Any?){executor.execute{try{val value=block();runOnUiThread{result.success(value)}}catch(_:Exception){runOnUiThread{result.error("unavailable","Capability unavailable or permission required",null)}}}}
    val prefs=getSharedPreferences("device",0);val controls=DeviceControls(this)
    when(call.method){
-    "status"->result.success(mapOf("deviceId" to prefs.getString("id",null),"deviceName" to Build.MODEL,"manufacturer" to Build.MANUFACTURER,"androidApi" to Build.VERSION.SDK_INT,"managementMode" to if(controls.owner())"managed" else "standard","capabilities" to controls.capabilities()))
+    "status"->result.success(mapOf("deviceId" to prefs.getString("id",null),"deviceName" to Build.MODEL,"manufacturer" to Build.MANUFACTURER,"androidApi" to Build.VERSION.SDK_INT,"managementMode" to if(controls.owner())"managed" else "standard","capabilities" to controls.capabilities(),"dnsFilter" to (prefs.getBoolean("vpn",false)&&System.currentTimeMillis()-prefs.getLong("vpnSeen",0)<120000),"locationSharing" to prefs.getBoolean("locationSharing",false)))
+    "registerPush"->{PushRegistration.request(this){token->if(token==null)result.error("firebase_configuration_required","Configure Firebase first",null)else result.success(token)}}
     "publicKey"->answer{Identity(this).publicKey()}
     "sign"->answer{Identity(this).headers(call.argument<String>("method")!!,call.argument<String>("path")!!,call.argument<String>("body")?:"")}
     "configure"->{val url=call.argument<String>("apiUrl")!!;if(!url.startsWith("https://")){result.error("https_required","HTTPS required",null)}else{prefs.edit().putString("id",call.argument<String>("deviceId")).putString("api",url).apply();SyncWorker.schedule(this);result.success(true)}}
@@ -30,6 +33,10 @@ class MainActivity:FlutterActivity(){
     "usageSettings"->{startActivity(UsageAdapter(this).settings());result.success(true)}
     "requestAdmin"->{startActivity(controls.adminIntent());result.success(true)}
     "notificationPermission"->{if(Build.VERSION.SDK_INT>=33)requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS),31);result.success(true)}
+    "startLocationSharing"->{if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED){requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION),30);result.error("permission_required","Choose permission and start sharing again",null)}else{ContextCompat.startForegroundService(this,Intent(this,LocationSharingService::class.java));result.success(true)}}
+    "stopLocationSharing"->{stopService(Intent(this,LocationSharingService::class.java));result.success(true)}
+    "startDnsFilter"->{val consent=VpnService.prepare(this);if(consent!=null){startActivityForResult(consent,40);result.success("approval_required")}else{ContextCompat.startForegroundService(this,Intent(this,DnsFilterService::class.java));result.success("starting")}}
+    "stopDnsFilter"->{stopService(Intent(this,DnsFilterService::class.java));result.success(true)}
     "openCapture"->{startActivity(Intent(this,LocalCheckInActivity::class.java));result.success(true)}
     "emergencyDialer"->{startActivity(Intent(Intent.ACTION_DIAL));result.success(true)}
     "openAppSettings"->{startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:$packageName")));result.success(true)}

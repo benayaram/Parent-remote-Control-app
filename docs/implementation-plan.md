@@ -1,4 +1,5 @@
 # Implementation plan
+
 Repository inspection: empty unborn repository; no code, dependencies, CI, or agents to reuse. Branch: feature/familyguard-android. The attached specification is preserved in master-specification.md.
 
 1. Phase 0: document capability boundaries, consent, architecture and test strategy before enforcement code.
@@ -12,3 +13,5 @@ Repository inspection: empty unborn repository; no code, dependencies, CI, or ag
 User override (2026-10-16): camera/microphone may be used ONLY for child-initiated, visible local check-ins with just-in-time permission, bounded duration, stop/delete, no remote activation, no background capture, no automatic upload. Parent cannot retrieve recordings. This supersedes only the original blanket camera/microphone exclusion. All other anti-surveillance restrictions remain.
 
 Required release gates: both APK builds, Firebase/Mongo integration, actual Android permission/usage/admin tests, managed enrollment tests, manifest review. A browser demonstration is not evidence of Android enforcement. Missing gates remain explicit, not waived.
+
+User clarification after initial phases: frontend remains Flutter, backend Node.js/MongoDB for text/structured records; Firebase Storage for images. Added explicit child-confirmed photo upload, private family access and 24h cleanup. This permits selected photo sharing but still prohibits remote activation, covert capture and voice upload.

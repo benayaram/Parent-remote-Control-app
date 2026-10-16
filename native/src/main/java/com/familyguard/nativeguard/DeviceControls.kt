@@ -17,7 +17,9 @@ class DeviceControls(private val context:Context){
  fun owner()=dpm.isDeviceOwnerApp(context.packageName)
  fun capabilities()=mapOf("usage" to UsageAdapter(context).granted(),"lock" to dpm.isAdminActive(admin),"location" to (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED),"suspend" to owner(),"kiosk" to false,"uninstall" to owner())
  fun adminIntent()=Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN,admin).putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,"Allow your family to request a screen lock. This does not make this phone a managed device.")
- fun execute(id:String,type:String,expiresAt:String):Map<String,String>{
+ companion object{private val executionLock=Any()}
+ fun execute(id:String,type:String,expiresAt:String):Map<String,String> = synchronized(executionLock){executeLocked(id,type,expiresAt)}
+ private fun executeLocked(id:String,type:String,expiresAt:String):Map<String,String>{
   if(PolicyEngine.expired(expiresAt,System.currentTimeMillis()))return mapOf("status" to "failed","reason" to "Command expired")
   val prefs=context.getSharedPreferences("commands",0)
   prefs.getString(id,null)?.let{return mapOf("status" to it)}

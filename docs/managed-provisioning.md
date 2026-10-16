@@ -1,3 +1,4 @@
 # Managed device test guide
+
 Use a dedicated owned test handset. Factory-reset/setup implications apply; do not run owner provisioning on an ordinary family handset. Follow current Android Enterprise provisioning documentation and confirm dpm.isDeviceOwnerApp at runtime. Active device admin alone only grants its declared force-lock policy.
 Before testing suspension, exclude system packages, current/home launcher, dialer/emergency, accessibility services, FamilyGuard and essential packages. Test recovery, power/reboot, offline expiry and SOS. Kiosk is unavailable until a reliable emergency escape is validated. Provide documented unenrollment via a separate owner-authorized recovery flow before distribution. Do not claim uninstall protection is safe for production without it.

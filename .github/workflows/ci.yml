@@ -26,6 +26,7 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v3
       - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - run: ./gradlew :native:testDebugUnitTest :native:assembleDebug
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
